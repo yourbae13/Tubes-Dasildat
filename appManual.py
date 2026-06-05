@@ -5,9 +5,40 @@ import os
 import glob
 
 st.set_page_config(
-    page_title="Weather Type Prediction",
+    page_title="Weather Type Prediction - Manual",
     page_icon="🌦️",
     layout="wide"
+)
+
+# ==========================
+# SIDEBAR MENU
+# ==========================
+st.sidebar.title("📋 Menu Navigasi")
+st.sidebar.markdown("---")
+
+menu = st.sidebar.radio(
+    "Pilih Halaman:",
+    [
+        "🏠 Prediksi Manual",
+        "📊 Prediksi Batch",
+        "📈 Evaluasi Model"
+    ],
+    format_func=lambda x: x
+)
+
+# Navigasi ke halaman lain
+if menu == "📊 Prediksi Batch":
+    st.switch_page("appWeather_Batch.py")
+elif menu == "📈 Evaluasi Model":
+    st.switch_page("appEvaluation.py")
+
+st.sidebar.markdown("---")
+st.sidebar.info(
+    """
+    **Informasi:**
+    - Model ML untuk klasifikasi cuaca
+    - Jenis cuaca: Rainy, Sunny, Cloudy, Snowy
+    """
 )
 
 # ==========================
@@ -72,14 +103,13 @@ def load_model(model_path):
 # ==========================
 # HEADER
 # ==========================
-st.title("🌦️ Weather Type Prediction App")
+st.title("🌦️ Weather Type Prediction - Prediksi Manual")
 
 st.write("""
 Aplikasi ini digunakan untuk memprediksi jenis cuaca berdasarkan
-data meteorologi dan kondisi lingkungan.
+data meteorologi dan kondisi lingkungan secara manual.
 
 Jenis cuaca yang dapat diprediksi:
-
 - 🌧️ Rainy
 - ☀️ Sunny
 - ☁️ Cloudy
@@ -177,14 +207,12 @@ with col2:
 
     st.markdown("### ☁️ Cloud Cover")
     
-    # Radio button untuk Cloud Cover (hanya satu yang bisa dipilih)
     cloud_cover_selection = st.radio(
         "Pilih kondisi awan:",
         options=list(CLOUD_COVER_OPTIONS.keys()),
         horizontal=True
     )
     
-    # Set nilai one-hot encoding berdasarkan pilihan
     for col_name in CLOUD_COVER_OPTIONS.values():
         input_data[col_name] = 0
     
@@ -195,14 +223,12 @@ with col2:
 with col3:
     st.markdown("### 🌸 Season")
     
-    # Radio button untuk Season
     season_selection = st.radio(
         "Pilih musim:",
         options=list(SEASON_OPTIONS.keys()),
         horizontal=True
     )
     
-    # Set nilai one-hot encoding berdasarkan pilihan
     for col_name in SEASON_OPTIONS.values():
         input_data[col_name] = 0
     
@@ -212,14 +238,12 @@ with col3:
 
     st.markdown("### 🗺️ Location")
     
-    # Radio button untuk Location
     location_selection = st.radio(
         "Pilih lokasi:",
         options=list(LOCATION_OPTIONS.keys()),
         horizontal=True
     )
     
-    # Set nilai one-hot encoding berdasarkan pilihan
     for col_name in LOCATION_OPTIONS.values():
         input_data[col_name] = 0
     
@@ -231,13 +255,11 @@ with col3:
 # ==========================
 st.subheader("📊 Ringkasan Input")
 
-# Buat dataframe untuk tampilan yang lebih rapi
 display_data = {
     "Parameter": [],
     "Nilai": []
 }
 
-# Numerik features
 numeric_features = [
     "Temperature", "Humidity", "Wind Speed", "Precipitation (%)",
     "Atmospheric Pressure", "Visibility (km)"
@@ -247,17 +269,14 @@ for feat in numeric_features:
     display_data["Parameter"].append(feat)
     display_data["Nilai"].append(input_data[feat])
 
-# Cloud Cover
 display_data["Parameter"].append("Cloud Cover")
 cloud_cover_value = [k for k, v in CLOUD_COVER_OPTIONS.items() if input_data[v] == 1][0]
 display_data["Nilai"].append(cloud_cover_value)
 
-# Season
 display_data["Parameter"].append("Season")
 season_value = [k for k, v in SEASON_OPTIONS.items() if input_data[v] == 1][0]
 display_data["Nilai"].append(season_value)
 
-# Location
 display_data["Parameter"].append("Location")
 location_value = [k for k, v in LOCATION_OPTIONS.items() if input_data[v] == 1][0]
 display_data["Nilai"].append(location_value)
@@ -281,7 +300,6 @@ if st.button("🔍 Prediksi Cuaca", type="primary", use_container_width=True):
 
         st.subheader("🎯 Hasil Prediksi")
 
-        # Tampilkan dengan warna dan ikon yang sesuai
         if prediction == "Rainy":
             st.success("🌧️ **Prediksi Cuaca: Rainy**")
             st.balloons()
@@ -314,7 +332,6 @@ if st.button("🔍 Prediksi Cuaca", type="primary", use_container_width=True):
 
             st.subheader("📈 Probabilitas Prediksi")
 
-            # Tampilkan dalam bentuk bar chart juga
             proba_df_sorted = proba_df.sort_values(
                 by="Probability",
                 ascending=False
@@ -326,7 +343,6 @@ if st.button("🔍 Prediksi Cuaca", type="primary", use_container_width=True):
                 hide_index=True
             )
 
-            # Bar chart untuk visualisasi
             st.bar_chart(
                 proba_df.set_index("Weather Type"),
                 use_container_width=True
