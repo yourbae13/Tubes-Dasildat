@@ -76,14 +76,20 @@ def prepare_input_data(df):
 
 
 # ==========================
-# SIDEBAR
+# SIDEBAR MENU (RADIO BUTTON)
 # ==========================
 st.sidebar.title("📋 Menu")
 st.sidebar.markdown("---")
 
-st.sidebar.page_link("appManual.py", label="🏠 Prediksi Manual", icon="🏠")
-st.sidebar.page_link("appWeather_Batch.py", label="📊 Prediksi Batch", icon="📊")
-st.sidebar.page_link("appEvaluation.py", label="📈 Evaluasi Model", icon="📈")
+menu = st.sidebar.radio(
+    "Pilih Halaman:",
+    ["🏠 Prediksi Manual", "📊 Prediksi Batch", "📈 Evaluasi Model"]
+)
+
+if menu == "🏠 Prediksi Manual":
+    st.switch_page("appManual.py")
+elif menu == "📈 Evaluasi Model":
+    st.switch_page("appEvaluation.py")
 
 st.sidebar.markdown("---")
 st.sidebar.info(

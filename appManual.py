@@ -70,14 +70,20 @@ def load_model(model_path):
 
 
 # ==========================
-# SIDEBAR
+# SIDEBAR MENU (RADIO BUTTON)
 # ==========================
 st.sidebar.title("📋 Menu")
 st.sidebar.markdown("---")
 
-st.sidebar.page_link("appManual.py", label="🏠 Prediksi Manual", icon="🏠")
-st.sidebar.page_link("appWeather_Batch.py", label="📊 Prediksi Batch", icon="📊")
-st.sidebar.page_link("appEvaluation.py", label="📈 Evaluasi Model", icon="📈")
+menu = st.sidebar.radio(
+    "Pilih Halaman:",
+    ["🏠 Prediksi Manual", "📊 Prediksi Batch", "📈 Evaluasi Model"]
+)
+
+if menu == "📊 Prediksi Batch":
+    st.switch_page("appWeather_Batch.py")
+elif menu == "📈 Evaluasi Model":
+    st.switch_page("appEvaluation.py")
 
 st.sidebar.markdown("---")
 st.sidebar.info(
