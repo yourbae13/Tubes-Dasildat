@@ -5,17 +5,29 @@ import os
 import glob
 
 st.set_page_config(
-    page_title="Breast Cancer Prediction",
-    page_icon="🧬",
+    page_title="Weather Classification Prediction",
+    page_icon="🌦️",
     layout="wide"
 )
 
 FEATURE_NAMES = [
-    "concave points_worst",
-    "perimeter_worst",
-    "concave points_mean",
-    "radius_worst",
-    "perimeter_mean",
+    "Temperature",
+    "Humidity",
+    "Wind Speed",
+    "Precipitation (%)",
+    "Atmospheric Pressure",
+    "Visibility (km)",
+    "Cc_clear",
+    "Cc_cloudy",
+    "Cc_overcast",
+    "Cc_partly cloudy",
+    "Ss_Autumn",
+    "Ss_Spring",
+    "Ss_Summer",
+    "Ss_Winter",
+    "Lc_coastal",
+    "Lc_inland",
+    "Lc_mountain"
 ]
 
 def get_model_files():
@@ -35,17 +47,7 @@ def load_model(model_path):
 
 
 def predict_label(prediction):
-    """
-    Pada dataset breast cancer dari scikit-learn:
-    0 = malignant
-    1 = benign
-    """
-    if prediction == 0:
-        return "Malignant / Kanker"
-    elif prediction == 1:
-        return "Benign / Tidak Kanker"
-    else:
-        return str(prediction)
+    return str(prediction)
 
 
 def read_uploaded_file(uploaded_file):
@@ -73,9 +75,10 @@ def prepare_input_data(df):
     return input_df
 
 
-st.title("🧬 Breast Cancer Prediction App")
+st.title("🌦️ Weather Classification Prediction")
 st.write(
-    "Aplikasi ini digunakan untuk memprediksi breast cancer menggunakan beberapa model machine learning."
+    "Aplikasi ini digunakan untuk memprediksi jenis cuaca "
+    "berdasarkan data meteorologi menggunakan beberapa model machine learning."
 )
 
 # =========================
@@ -123,7 +126,7 @@ menu = st.sidebar.radio(
 
 if menu == "Prediksi Manual":
     st.header("1. Prediksi Data Manual")
-    st.write("Masukkan nilai fitur breast cancer secara manual.")
+    st.write("Masukkan nilai fitur weather type secara manual.")
 
     input_data = {}
 
@@ -194,7 +197,7 @@ elif menu == "Prediksi CSV/Excel":
     st.header("2. Prediksi Banyak Data dari CSV/Excel")
     st.write(
         "Upload file data uji dalam format CSV atau Excel. "
-        "File harus memiliki kolom fitur yang sesuai dengan data breast cancer."
+        "File harus memiliki kolom fitur yang sesuai dengan data weather Type."
     )
 
     uploaded_file = st.file_uploader(
@@ -269,7 +272,7 @@ elif menu == "Prediksi CSV/Excel":
                             st.download_button(
                                 label="Download Hasil Prediksi",
                                 data=csv_result,
-                                file_name="hasil_prediksi_breast_cancer.csv",
+                                file_name="hasil_prediksi_weather.csv",
                                 mime="text/csv"
                             )
 
