@@ -11,26 +11,33 @@ st.set_page_config(
 )
 
 # ==========================
-# SIDEBAR MENU
+# SIDEBAR MENU (Tanpa switch_page)
 # ==========================
 st.sidebar.title("📋 Menu Navigasi")
 st.sidebar.markdown("---")
 
-menu = st.sidebar.radio(
-    "Pilih Halaman:",
-    [
-        "🏠 Prediksi Manual",
-        "📊 Prediksi Batch",
-        "📈 Evaluasi Model"
-    ],
-    format_func=lambda x: x
-)
+# Gunakan session state untuk navigasi
+if "page" not in st.session_state:
+    st.session_state.page = "Batch"
 
-# Navigasi ke halaman lain
-if menu == "🏠 Prediksi Manual":
-    st.switch_page("appManual.py")
-elif menu == "📈 Evaluasi Model":
-    st.switch_page("appEvaluation.py")
+def navigate_to(page):
+    st.session_state.page = page
+    st.rerun()
+
+# Tampilkan menu di sidebar
+col1, col2, col3 = st.sidebar.columns(3)
+
+with col1:
+    if st.button("🏠 Manual", use_container_width=True):
+        navigate_to("Manual")
+
+with col2:
+    if st.button("📊 Batch", use_container_width=True):
+        navigate_to("Batch")
+
+with col3:
+    if st.button("📈 Evaluasi", use_container_width=True):
+        navigate_to("Evaluasi")
 
 st.sidebar.markdown("---")
 st.sidebar.info(
@@ -40,6 +47,12 @@ st.sidebar.info(
     - Hasil akan ditampilkan dan bisa di-download
     """
 )
+
+# Jika navigasi ke halaman lain
+if st.session_state.page == "Manual":
+    st.switch_page("appManual.py")
+elif st.session_state.page == "Evaluasi":
+    st.switch_page("appEvaluation.py")
 
 # ==========================
 # FITUR DATASET
@@ -66,6 +79,8 @@ FEATURE_NAMES = [
 
 def get_model_files():
     model_folder = "model"
+    if not os.path.exists(model_folder):
+        os.makedirs(model_folder)
     joblib_files = glob.glob(os.path.join(model_folder, "*.joblib"))
     pkl_files = glob.glob(os.path.join(model_folder, "*.pkl"))
     model_files = joblib_files + pkl_files

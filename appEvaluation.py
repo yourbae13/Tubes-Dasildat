@@ -15,26 +15,33 @@ st.set_page_config(
 )
 
 # ==========================
-# SIDEBAR MENU
+# SIDEBAR MENU (Tanpa switch_page)
 # ==========================
 st.sidebar.title("📋 Menu Navigasi")
 st.sidebar.markdown("---")
 
-menu = st.sidebar.radio(
-    "Pilih Halaman:",
-    [
-        "🏠 Prediksi Manual",
-        "📊 Prediksi Batch",
-        "📈 Evaluasi Model"
-    ],
-    format_func=lambda x: x
-)
+# Gunakan session state untuk navigasi
+if "page" not in st.session_state:
+    st.session_state.page = "Evaluasi"
 
-# Navigasi ke halaman lain
-if menu == "🏠 Prediksi Manual":
-    st.switch_page("appManual.py")
-elif menu == "📊 Prediksi Batch":
-    st.switch_page("appWeather_Batch.py")
+def navigate_to(page):
+    st.session_state.page = page
+    st.rerun()
+
+# Tampilkan menu di sidebar
+col1, col2, col3 = st.sidebar.columns(3)
+
+with col1:
+    if st.button("🏠 Manual", use_container_width=True):
+        navigate_to("Manual")
+
+with col2:
+    if st.button("📊 Batch", use_container_width=True):
+        navigate_to("Batch")
+
+with col3:
+    if st.button("📈 Evaluasi", use_container_width=True):
+        navigate_to("Evaluasi")
 
 st.sidebar.markdown("---")
 st.sidebar.info(
@@ -45,6 +52,12 @@ st.sidebar.info(
     - Menampilkan Accuracy, Confusion Matrix, Classification Report
     """
 )
+
+# Jika navigasi ke halaman lain
+if st.session_state.page == "Manual":
+    st.switch_page("appManual.py")
+elif st.session_state.page == "Batch":
+    st.switch_page("appWeather_Batch.py")
 
 # ==========================
 # FITUR DATASET
@@ -76,6 +89,8 @@ TARGET_COLUMN = "Weather Type"
 # ==========================
 def get_model_files():
     model_folder = "model"
+    if not os.path.exists(model_folder):
+        os.makedirs(model_folder)
     joblib_files = glob.glob(os.path.join(model_folder, "*.joblib"))
     pkl_files = glob.glob(os.path.join(model_folder, "*.pkl"))
     return joblib_files + pkl_files
@@ -229,7 +244,6 @@ if uploaded_file is not None:
                     )
                 
                 with col4:
-                    # Hitung jumlah prediksi benar
                     correct_pred = (y_pred == y_true).sum()
                     st.metric(
                         label="✅ Prediksi Benar",
@@ -242,7 +256,6 @@ if uploaded_file is not None:
                 # ==========================
                 st.subheader("🔢 Confusion Matrix")
                 
-                # Plot confusion matrix dengan matplotlib
                 fig, ax = plt.subplots(figsize=(10, 8))
                 
                 classes = sorted(set(y_true) | set(y_pred))
@@ -279,22 +292,18 @@ if uploaded_file is not None:
                 # ==========================
                 st.subheader("📋 Classification Report")
                 
-                # Format ulang untuk tampilan yang lebih baik
                 display_report = report_df.copy()
                 
-                # Hapus baris 'accuracy' dari dataframe utama
                 accuracy_value = None
                 if 'accuracy' in display_report.index:
                     accuracy_value = display_report.loc['accuracy', 'precision'] if 'precision' in display_report.columns else None
                     display_report = display_report.drop(index=['accuracy'])
                 
-                # Tampilkan dataframe
                 st.dataframe(
                     display_report.style.format("{:.4f}"),
                     use_container_width=True
                 )
                 
-                # Tampilkan accuracy secara terpisah
                 if accuracy_value:
                     st.info(f"**📊 Overall Accuracy:** {accuracy_value:.4f} ({accuracy_value*100:.2f}%)")
                 
@@ -303,7 +312,6 @@ if uploaded_file is not None:
                 # ==========================
                 st.subheader("💾 Download Hasil Evaluasi")
                 
-                # Simpan prediksi ke dataframe
                 result_df = df.copy()
                 result_df['Predicted'] = y_pred
                 result_df['Correct'] = y_true == y_pred
@@ -335,7 +343,6 @@ if uploaded_file is not None:
                 # Analisis per kelas
                 st.write("**📊 Performa per kelas:**")
                 
-                # Buat tabel ringkasan per kelas
                 class_summary = []
                 for class_name in classes:
                     if class_name in report:
@@ -352,7 +359,6 @@ if uploaded_file is not None:
                 # Rekomendasi
                 st.subheader("💡 Rekomendasi")
                 
-                # Cari kelas dengan performa terendah
                 worst_class = None
                 worst_f1 = 1.0
                 for class_name in classes:
@@ -370,11 +376,9 @@ if uploaded_file is not None:
 else:
     st.info("📂 Silakan upload file data test (CSV atau Excel) untuk memulai evaluasi.")
     
-    # Tampilkan contoh format file
     with st.expander("ℹ️ Lihat contoh format file yang diperlukan"):
         st.write("**File harus memiliki kolom-kolom berikut:**")
         
-        # Contoh data dummy
         sample_data = {}
         for feat in FEATURE_NAMES[:6]:
             sample_data[feat] = [20.0, 50.0, 10.0, 20.0, 1013.0, 10.0]
