@@ -11,50 +11,6 @@ st.set_page_config(
 )
 
 # ==========================
-# SIDEBAR MENU (Tanpa switch_page)
-# ==========================
-st.sidebar.title("📋 Menu Navigasi")
-st.sidebar.markdown("---")
-
-# Gunakan session state untuk navigasi
-if "page" not in st.session_state:
-    st.session_state.page = "Manual"
-
-def navigate_to(page):
-    st.session_state.page = page
-    st.rerun()
-
-# Tampilkan menu di sidebar
-col1, col2, col3 = st.sidebar.columns(3)
-
-with col1:
-    if st.button("🏠 Manual", use_container_width=True):
-        navigate_to("Manual")
-
-with col2:
-    if st.button("📊 Batch", use_container_width=True):
-        navigate_to("Batch")
-
-with col3:
-    if st.button("📈 Evaluasi", use_container_width=True):
-        navigate_to("Evaluasi")
-
-st.sidebar.markdown("---")
-st.sidebar.info(
-    """
-    **Informasi:**
-    - Model ML untuk klasifikasi cuaca
-    - Jenis cuaca: Rainy, Sunny, Cloudy, Snowy
-    """
-)
-
-# Jika navigasi ke halaman lain
-if st.session_state.page == "Batch":
-    st.switch_page("appWeather_Batch.py")
-elif st.session_state.page == "Evaluasi":
-    st.switch_page("appEvaluation.py")
-
-# ==========================
 # FITUR DATASET
 # ==========================
 FEATURE_NAMES = [
@@ -103,8 +59,6 @@ LOCATION_OPTIONS = {
 # ==========================
 def get_model_files():
     model_folder = "model"
-    if not os.path.exists(model_folder):
-        os.makedirs(model_folder)
     joblib_files = glob.glob(os.path.join(model_folder, "*.joblib"))
     pkl_files = glob.glob(os.path.join(model_folder, "*.pkl"))
     return joblib_files + pkl_files
@@ -114,6 +68,25 @@ def get_model_files():
 def load_model(model_path):
     return joblib.load(model_path)
 
+
+# ==========================
+# SIDEBAR
+# ==========================
+st.sidebar.title("📋 Menu")
+st.sidebar.markdown("---")
+
+st.sidebar.page_link("appManual.py", label="🏠 Prediksi Manual", icon="🏠")
+st.sidebar.page_link("appWeather_Batch.py", label="📊 Prediksi Batch", icon="📊")
+st.sidebar.page_link("appEvaluation.py", label="📈 Evaluasi Model", icon="📈")
+
+st.sidebar.markdown("---")
+st.sidebar.info(
+    """
+    **Informasi:**
+    - Model ML untuk klasifikasi cuaca
+    - Jenis cuaca: Rainy, Sunny, Cloudy, Snowy
+    """
+)
 
 # ==========================
 # HEADER

@@ -5,58 +5,11 @@ import os
 import glob
 
 st.set_page_config(
-    page_title="Weather Classification - Batch Prediction",
+    page_title="Weather Classification Prediction",
     page_icon="🌦️",
     layout="wide"
 )
 
-# ==========================
-# SIDEBAR MENU (Tanpa switch_page)
-# ==========================
-st.sidebar.title("📋 Menu Navigasi")
-st.sidebar.markdown("---")
-
-# Gunakan session state untuk navigasi
-if "page" not in st.session_state:
-    st.session_state.page = "Batch"
-
-def navigate_to(page):
-    st.session_state.page = page
-    st.rerun()
-
-# Tampilkan menu di sidebar
-col1, col2, col3 = st.sidebar.columns(3)
-
-with col1:
-    if st.button("🏠 Manual", use_container_width=True):
-        navigate_to("Manual")
-
-with col2:
-    if st.button("📊 Batch", use_container_width=True):
-        navigate_to("Batch")
-
-with col3:
-    if st.button("📈 Evaluasi", use_container_width=True):
-        navigate_to("Evaluasi")
-
-st.sidebar.markdown("---")
-st.sidebar.info(
-    """
-    **Informasi:**
-    - Upload file CSV/Excel untuk prediksi batch
-    - Hasil akan ditampilkan dan bisa di-download
-    """
-)
-
-# Jika navigasi ke halaman lain
-if st.session_state.page == "Manual":
-    st.switch_page("appManual.py")
-elif st.session_state.page == "Evaluasi":
-    st.switch_page("appEvaluation.py")
-
-# ==========================
-# FITUR DATASET
-# ==========================
 FEATURE_NAMES = [
     "Temperature",
     "Humidity",
@@ -79,10 +32,10 @@ FEATURE_NAMES = [
 
 def get_model_files():
     model_folder = "model"
-    if not os.path.exists(model_folder):
-        os.makedirs(model_folder)
+
     joblib_files = glob.glob(os.path.join(model_folder, "*.joblib"))
     pkl_files = glob.glob(os.path.join(model_folder, "*.pkl"))
+
     model_files = joblib_files + pkl_files
     return model_files
 
@@ -122,14 +75,36 @@ def prepare_input_data(df):
     return input_df
 
 
-st.title("🌦️ Weather Classification - Prediksi Batch")
+# ==========================
+# SIDEBAR
+# ==========================
+st.sidebar.title("📋 Menu")
+st.sidebar.markdown("---")
+
+st.sidebar.page_link("appManual.py", label="🏠 Prediksi Manual", icon="🏠")
+st.sidebar.page_link("appWeather_Batch.py", label="📊 Prediksi Batch", icon="📊")
+st.sidebar.page_link("appEvaluation.py", label="📈 Evaluasi Model", icon="📈")
+
+st.sidebar.markdown("---")
+st.sidebar.info(
+    """
+    **Informasi:**
+    - Upload file CSV/Excel untuk prediksi batch
+    - Hasil akan ditampilkan dan bisa di-download
+    """
+)
+
+
+st.title("🌦️ Weather Classification Prediction")
 st.write(
-    "Upload file CSV/Excel yang berisi data cuaca untuk diprediksi secara batch."
+    "Aplikasi ini digunakan untuk memprediksi jenis cuaca "
+    "berdasarkan data meteorologi menggunakan beberapa model machine learning."
 )
 
 # =========================
 # PILIH MODEL
 # =========================
+
 st.header("📌 Pilih Model")
 
 model_files = get_model_files()
@@ -154,6 +129,7 @@ except Exception as e:
     st.error(f"Model gagal dimuat: {e}")
     st.stop()
 
+
 # =========================
 # UPLOAD FILE
 # =========================
@@ -168,7 +144,7 @@ if uploaded_file is not None:
     try:
         df = read_uploaded_file(uploaded_file)
 
-        st.subheader("📋 Preview Data Uji")
+        st.subheader("Preview Data Uji")
         st.dataframe(df.head(), use_container_width=True)
 
         st.write(f"Jumlah data: {df.shape[0]} baris")
@@ -177,12 +153,12 @@ if uploaded_file is not None:
         missing_cols = validate_input_columns(df)
 
         if len(missing_cols) > 0:
-            st.error("❌ Kolom pada file belum sesuai dengan fitur yang dibutuhkan model.")
+            st.error("Kolom pada file belum sesuai dengan fitur yang dibutuhkan model.")
 
-            st.write("**Kolom yang belum ada:**")
+            st.write("Kolom yang belum ada:")
             st.write(missing_cols)
 
-            st.write("**Kolom yang harus ada:**")
+            st.write("Kolom yang harus ada:")
             st.write(FEATURE_NAMES)
 
         else:
@@ -190,7 +166,7 @@ if uploaded_file is not None:
 
             if input_df.isnull().sum().sum() > 0:
                 st.error(
-                    "❌ Ada nilai kosong atau data non-numerik pada kolom fitur. "
+                    "Ada nilai kosong atau data non-numerik pada kolom fitur. "
                     "Silakan cek kembali file CSV/Excel."
                 )
 
@@ -201,12 +177,12 @@ if uploaded_file is not None:
                 st.write(missing_value_info)
 
             else:
-                st.success("✅ Format data sudah sesuai. Data siap diprediksi.")
+                st.success("Format data sudah sesuai. Data siap diprediksi.")
 
-                st.subheader("📊 Data Fitur yang Digunakan untuk Prediksi")
+                st.subheader("Data Fitur yang Digunakan untuk Prediksi")
                 st.dataframe(input_df.head(), use_container_width=True)
 
-                if st.button("🔍 Prediksi Data", type="primary", use_container_width=True):
+                if st.button("Prediksi Data CSV/Excel", type="primary", use_container_width=True):
                     try:
                         with st.spinner("Sedang melakukan prediksi..."):
                             predictions = model.predict(input_df)
@@ -217,7 +193,7 @@ if uploaded_file is not None:
                                 predict_label(pred) for pred in predictions
                             ]
 
-                            # Hitung distribusi prediksi
+                            # Distribusi hasil prediksi
                             st.subheader("📈 Distribusi Hasil Prediksi")
                             prediction_counts = result_df["prediction_label"].value_counts()
                             
@@ -229,21 +205,20 @@ if uploaded_file is not None:
                             with col2:
                                 st.bar_chart(prediction_counts)
 
-                            st.subheader("📋 Hasil Prediksi")
+                            st.subheader("Hasil Prediksi")
                             st.dataframe(result_df, use_container_width=True)
 
                             csv_result = result_df.to_csv(index=False).encode("utf-8")
 
                             st.download_button(
-                                label="💾 Download Hasil Prediksi (CSV)",
+                                label="Download Hasil Prediksi (CSV)",
                                 data=csv_result,
-                                file_name=f"hasil_prediksi_{selected_model_name.replace('.joblib', '').replace('.pkl', '')}.csv",
+                                file_name="hasil_prediksi_weather.csv",
                                 mime="text/csv"
                             )
 
-                            # Tambahkan probabilitas jika model support
                             if hasattr(model, "predict_proba"):
-                                st.subheader("📊 Probabilitas Prediksi (Sample)")
+                                st.subheader("📊 Probabilitas Prediksi (Sample 5 data pertama)")
                                 
                                 probabilities = model.predict_proba(input_df.head(5))
                                 class_names = model.classes_
