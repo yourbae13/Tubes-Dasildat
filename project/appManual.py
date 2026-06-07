@@ -3,6 +3,7 @@ import pandas as pd
 import joblib
 import os
 import glob
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
 
 st.set_page_config(
     page_title="Weather Type Prediction",
@@ -10,9 +11,6 @@ st.set_page_config(
     layout="wide"
 )
 
-# ==========================
-# FITUR DATASET
-# ==========================
 FEATURE_NAMES = [
     "Temperature",
     "Humidity",
@@ -33,7 +31,6 @@ FEATURE_NAMES = [
     "Lc_mountain"
 ]
 
-# Mapping untuk tampilan user-friendly
 CLOUD_COVER_OPTIONS = {
     "Clear": "Cc_clear",
     "Cloudy": "Cc_cloudy",
@@ -55,70 +52,54 @@ LOCATION_OPTIONS = {
 }
 
 # ==========================
-# LOAD MODEL
+# MODEL
 # ==========================
 def get_model_files():
     model_folder = "model"
-    joblib_files = glob.glob(os.path.join(model_folder, "*.joblib"))
-    pkl_files = glob.glob(os.path.join(model_folder, "*.pkl"))
-    return joblib_files + pkl_files
-
+    return glob.glob(os.path.join(model_folder, "*.joblib")) + glob.glob(os.path.join(model_folder, "*.pkl"))
 
 @st.cache_resource
-def load_model(model_path):
-    return joblib.load(model_path)
-
+def load_model(path):
+    return joblib.load(path)
 
 # ==========================
-# HEADER
+# EVALUASI MODEL
+# ==========================
+def evaluate_model(model):
+    try:
+        df = pd.read_csv("weather_classification_data_cleaned.csv")
+
+        X = df[FEATURE_NAMES]
+        y_true = df["Weather Type"]
+        y_pred = model.predict(X)
+
+        accuracy = accuracy_score(y_true, y_pred)
+        cm = confusion_matrix(y_true, y_pred, labels=model.classes_)
+        report = classification_report(y_true, y_pred)
+
+        return accuracy, cm, report
+
+    except Exception as e:
+        return None, None, str(e)
+
+# ==========================
+# UI
 # ==========================
 st.title("🌦️ Weather Type Prediction App")
 
-st.write("""
-Aplikasi ini digunakan untuk memprediksi jenis cuaca berdasarkan
-data meteorologi dan kondisi lingkungan.
-
-Jenis cuaca yang dapat diprediksi:
-
-- 🌧️ Rainy
-- ☀️ Sunny
-- ☁️ Cloudy
-- ❄️ Snowy
-""")
-
-# ==========================
-# PILIH MODEL
-# ==========================
-st.header("📌 Pilih Model")
-
 model_files = get_model_files()
 
-if len(model_files) == 0:
-    st.error("Belum ada file model pada folder 'model'.")
+if not model_files:
+    st.error("Model belum ada")
     st.stop()
 
-model_names = [os.path.basename(file) for file in model_files]
+model_names = [os.path.basename(m) for m in model_files]
 
-selected_model_name = st.selectbox(
-    "Pilih Model Machine Learning",
-    model_names
-)
+selected_model = st.selectbox("Pilih Model", model_names)
+model = load_model(model_files[model_names.index(selected_model)])
 
-selected_model_path = model_files[
-    model_names.index(selected_model_name)
-]
+st.success(f"Model aktif: {selected_model}")
 
-try:
-    model = load_model(selected_model_path)
-    st.success(f"Model aktif: {selected_model_name}")
-
-except Exception as e:
-    st.error(f"Gagal memuat model: {e}")
-    st.stop()
-
-# ==========================
-# INPUT DATA
-# ==========================
 st.header("📝 Input Data")
 
 input_data = {}
@@ -126,198 +107,47 @@ input_data = {}
 col1, col2, col3 = st.columns(3)
 
 with col1:
-    input_data["Temperature"] = st.number_input(
-        "🌡️ Temperature (°C)",
-        value=20.0,
-        step=0.5,
-        format="%.1f"
-    )
-
-    input_data["Humidity"] = st.number_input(
-        "💧 Humidity (%)",
-        value=50.0,
-        min_value=0.0,
-        max_value=100.0,
-        step=1.0,
-        format="%.1f"
-    )
-
-    input_data["Wind Speed"] = st.number_input(
-        "💨 Wind Speed (km/h)",
-        value=10.0,
-        step=0.5,
-        format="%.1f"
-    )
-
-    input_data["Precipitation (%)"] = st.number_input(
-        "🌧️ Precipitation (%)",
-        value=20.0,
-        min_value=0.0,
-        max_value=100.0,
-        step=1.0,
-        format="%.1f"
-    )
-
-    input_data["Atmospheric Pressure"] = st.number_input(
-        "📊 Atmospheric Pressure (hPa)",
-        value=1013.0,
-        step=0.5,
-        format="%.2f"
-    )
-
+    input_data["Temperature"] = st.number_input("Temperature", 20.0)
+    input_data["Humidity"] = st.number_input("Humidity", 50.0)
+    input_data["Wind Speed"] = st.number_input("Wind Speed", 10.0)
+    input_data["Precipitation (%)"] = st.number_input("Precipitation (%)", 20.0)
+    input_data["Atmospheric Pressure"] = st.number_input("Pressure", 1013.0)
 
 with col2:
-    input_data["Visibility (km)"] = st.number_input(
-        "Visibility (km)",
-        value=10.0
-    )
-
-    cloud_cover = st.selectbox(
-        "Cloud Cover",
-        [
-            "clear",
-            "cloudy",
-            "overcast",
-            "partly cloudy"
-        ]
-    )
+    input_data["Visibility (km)"] = st.number_input("Visibility", 10.0)
+    cloud = st.selectbox("Cloud Cover", list(CLOUD_COVER_OPTIONS.keys()))
 
 with col3:
-    season = st.selectbox(
-        "Season",
-        [
-            "Autumn",
-            "Spring",
-            "Summer",
-            "Winter"
-        ]
-    )
+    season = st.selectbox("Season", list(SEASON_OPTIONS.keys()))
+    location = st.selectbox("Location", list(LOCATION_OPTIONS.keys()))
 
-    location = st.selectbox(
-        "Location",
-        [
-            "coastal",
-            "inland",
-            "mountain"
-        ]
-    )
-    
-    # Set nilai one-hot encoding berdasarkan pilihan
-    for col_name in LOCATION_OPTIONS.values():
-        input_data[col_name] = 0
-    
-    selected_location_col = LOCATION_OPTIONS[location_selection]
-    input_data[selected_location_col] = 1
+    for c in LOCATION_OPTIONS.values():
+        input_data[c] = 0
 
-# ==========================
-# TAMPILAN RINGKASAN INPUT
-# ==========================
-st.subheader("📊 Ringkasan Input")
+    input_data[LOCATION_OPTIONS[location]] = 1
 
-# Buat dataframe untuk tampilan yang lebih rapi
-display_data = {
-    "Parameter": [],
-    "Nilai": []
-}
+    for c in SEASON_OPTIONS.values():
+        input_data[c] = 0
 
-# Numerik features
-numeric_features = [
-    "Temperature", "Humidity", "Wind Speed", "Precipitation (%)",
-    "Atmospheric Pressure", "Visibility (km)"
-]
+    input_data[SEASON_OPTIONS[season]] = 1
 
-for feat in numeric_features:
-    display_data["Parameter"].append(feat)
-    display_data["Nilai"].append(input_data[feat])
+    for c in CLOUD_COVER_OPTIONS.values():
+        input_data[c] = 0
 
-# Cloud Cover
-display_data["Parameter"].append("Cloud Cover")
-cloud_cover_value = [k for k, v in CLOUD_COVER_OPTIONS.items() if input_data[v] == 1][0]
-display_data["Nilai"].append(cloud_cover_value)
+    input_data[CLOUD_COVER_OPTIONS[cloud]] = 1
 
-# Season
-display_data["Parameter"].append("Season")
-season_value = [k for k, v in SEASON_OPTIONS.items() if input_data[v] == 1][0]
-display_data["Nilai"].append(season_value)
+input_df = pd.DataFrame([input_data])[FEATURE_NAMES]
 
-# Location
-display_data["Parameter"].append("Location")
-location_value = [k for k, v in LOCATION_OPTIONS.items() if input_data[v] == 1][0]
-display_data["Nilai"].append(location_value)
+st.dataframe(input_df)
 
-display_df = pd.DataFrame(display_data)
-st.dataframe(display_df, use_container_width=True, hide_index=True)
+if st.button("🔍 Prediksi"):
+    pred = model.predict(input_df)[0]
+    st.success(f"Hasil: {pred}")
 
-# ==========================
-# DATAFRAME INPUT UNTUK MODEL
-# ==========================
-input_df = pd.DataFrame([input_data])
-input_df = input_df[FEATURE_NAMES]
+    accuracy, cm, report = evaluate_model(model)
 
-# ==========================
-# PREDIKSI
-# ==========================
-if st.button("🔍 Prediksi Cuaca", type="primary", use_container_width=True):
-
-    try:
-        prediction = model.predict(input_df)[0]
-
-        st.subheader("🎯 Hasil Prediksi")
-
-        # Tampilkan dengan warna dan ikon yang sesuai
-        if prediction == "Rainy":
-            st.success("🌧️ **Prediksi Cuaca: Rainy**")
-            st.balloons()
-
-        elif prediction == "Sunny":
-            st.success("☀️ **Prediksi Cuaca: Sunny**")
-            st.balloons()
-
-        elif prediction == "Cloudy":
-            st.success("☁️ **Prediksi Cuaca: Cloudy**")
-
-        elif prediction == "Snowy":
-            st.success("❄️ **Prediksi Cuaca: Snowy**")
-            st.snow()
-
-        else:
-            st.success(f"**Hasil Prediksi: {prediction}**")
-
-        # ==========================
-        # PROBABILITAS
-        # ==========================
-        if hasattr(model, "predict_proba"):
-            probabilities = model.predict_proba(input_df)[0]
-            class_names = model.classes_
-
-            proba_df = pd.DataFrame({
-                "Weather Type": class_names,
-                "Probability": probabilities
-            })
-
-            st.subheader("📈 Probabilitas Prediksi")
-
-            # Tampilkan dalam bentuk bar chart juga
-            proba_df_sorted = proba_df.sort_values(
-                by="Probability",
-                ascending=False
-            )
-
-            st.dataframe(
-                proba_df_sorted,
-                use_container_width=True,
-                hide_index=True
-            )
-
-            # Bar chart untuk visualisasi
-            st.bar_chart(
-                proba_df.set_index("Weather Type"),
-                use_container_width=True
-            )
-
-        else:
-            st.info("Model tidak mendukung predict_proba().")
-
-    except Exception as e:
-        st.error(f"Terjadi error saat prediksi: {e}")
-        st.exception(e)
+    if accuracy:
+        st.divider()
+        st.metric("Accuracy", f"{accuracy * 100:.2f}%")
+        st.code(report)
+        st.dataframe(pd.DataFrame(cm))
