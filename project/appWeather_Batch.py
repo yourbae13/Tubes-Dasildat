@@ -3,6 +3,11 @@ import pandas as pd
 import joblib
 import os
 import glob
+from sklearn.metrics import (
+    accuracy_score,
+    confusion_matrix,
+    classification_report
+)
 
 st.set_page_config(
     page_title="Weather Classification Prediction",
@@ -73,7 +78,32 @@ def prepare_input_data(df):
         input_df[col] = pd.to_numeric(input_df[col], errors="coerce")
 
     return input_df
+def evaluate_model(model):
+    try:
+        df = pd.read_csv("weather_classification_data_cleaned.csv")
 
+        X = df[FEATURE_NAMES]
+        y = df["Weather Type"]
+
+        y_pred = model.predict(X)
+
+        accuracy = accuracy_score(y, y_pred)
+
+        cm = confusion_matrix(
+            y,
+            y_pred,
+            labels=model.classes_
+        )
+
+        report = classification_report(
+            y,
+            y_pred
+        )
+
+        return accuracy, cm, report
+
+    except Exception as e:
+        return None, None, str(e)
 
 st.title("🌦️ Weather Classification Prediction")
 st.write(
@@ -161,34 +191,111 @@ if menu == "Prediksi Manual":
     st.subheader("Data yang Dimasukkan")
     st.dataframe(input_df, use_container_width=True)
 
-    if st.button("Prediksi Data Manual"):
+if st.button("Prediksi Data Manual"):
+    try:
+        prediction = model.predict(input_df)[0]
+        prediction_label = predict_label(prediction)
+
+        st.subheader("Hasil Prediksi")
+        st.success(
+            f"Hasil prediksi menggunakan {selected_model_name}: {prediction_label}"
+        )
+
+        # =========================
+        # PROBABILITAS PREDIKSI
+        # =========================
+
+        if hasattr(model, "predict_proba"):
+            proba = model.predict_proba(input_df)[0]
+
+            if hasattr(model, "classes_"):
+                class_names = [
+                    predict_label(cls)
+                    for cls in model.classes_
+                ]
+            else:
+                class_names = [
+                    f"Class {i}"
+                    for i in range(len(proba))
+                ]
+
+            proba_df = pd.DataFrame({
+                "Class": class_names,
+                "Probability": proba
+            })
+
+            st.subheader("Probabilitas Prediksi")
+            st.dataframe(
+                proba_df,
+                use_container_width=True
+            )
+
+        # =========================
+        # EVALUASI MODEL
+        # =========================
+
         try:
-            prediction = model.predict(input_df)[0]
-            prediction_label = predict_label(prediction)
+            dataset_eval = pd.read_csv(
+                "weather_classification_data_cleaned.csv"
+            )
 
-            st.subheader("Hasil Prediksi")
-            st.success(f"Hasil prediksi menggunakan {selected_model_name}: {prediction_label}")
+            X_eval = dataset_eval[FEATURE_NAMES]
+            y_eval = dataset_eval["Weather Type"]
 
-            if hasattr(model, "predict_proba"):
-                proba = model.predict_proba(input_df)[0]
+            y_pred_eval = model.predict(X_eval)
 
-                if hasattr(model, "classes_"):
-                    class_names = [predict_label(cls) for cls in model.classes_]
-                else:
-                    class_names = [f"Class {i}" for i in range(len(proba))]
+            from sklearn.metrics import (
+                accuracy_score,
+                confusion_matrix,
+                classification_report
+            )
 
-                proba_df = pd.DataFrame({
-                    "Class": class_names,
-                    "Probability": proba
-                })
+            accuracy = accuracy_score(
+                y_eval,
+                y_pred_eval
+            )
 
-                st.subheader("Probabilitas Prediksi")
-                st.dataframe(proba_df, use_container_width=True)
+            cm = confusion_matrix(
+                y_eval,
+                y_pred_eval
+            )
 
-        except Exception as e:
-            st.error(f"Terjadi error saat prediksi: {e}")
+            report = classification_report(
+                y_eval,
+                y_pred_eval
+            )
 
+            st.divider()
 
+            st.subheader("📊 Accuracy Score")
+
+            st.metric(
+                label="Accuracy",
+                value=f"{accuracy * 100:.2f}%"
+            )
+
+            st.subheader("📋 Classification Report")
+
+            st.code(report)
+
+            st.subheader("🧩 Confusion Matrix")
+
+            cm_df = pd.DataFrame(cm)
+
+            st.dataframe(
+                cm_df,
+                use_container_width=True
+            )
+
+        except Exception as eval_error:
+            st.warning(
+                f"Gagal menghitung evaluasi model: {eval_error}"
+            )
+
+    except Exception as e:
+        st.error(
+            f"Terjadi error saat prediksi: {e}"
+        )
 # =========================
 # MENU 2: PREDIKSI CSV/EXCEL
 # =========================

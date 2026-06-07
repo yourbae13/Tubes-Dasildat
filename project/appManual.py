@@ -168,55 +168,38 @@ with col1:
 
 with col2:
     input_data["Visibility (km)"] = st.number_input(
-        "👁️ Visibility (km)",
-        value=10.0,
-        min_value=0.0,
-        step=0.5,
-        format="%.1f"
+        "Visibility (km)",
+        value=10.0
     )
 
-    st.markdown("### ☁️ Cloud Cover")
-    
-    # Radio button untuk Cloud Cover (hanya satu yang bisa dipilih)
-    cloud_cover_selection = st.radio(
-        "Pilih kondisi awan:",
-        options=list(CLOUD_COVER_OPTIONS.keys()),
-        horizontal=True
+    cloud_cover = st.selectbox(
+        "Cloud Cover",
+        [
+            "clear",
+            "cloudy",
+            "overcast",
+            "partly cloudy"
+        ]
     )
-    
-    # Set nilai one-hot encoding berdasarkan pilihan
-    for col_name in CLOUD_COVER_OPTIONS.values():
-        input_data[col_name] = 0
-    
-    selected_cloud_col = CLOUD_COVER_OPTIONS[cloud_cover_selection]
-    input_data[selected_cloud_col] = 1
-
 
 with col3:
-    st.markdown("### 🌸 Season")
-    
-    # Radio button untuk Season
-    season_selection = st.radio(
-        "Pilih musim:",
-        options=list(SEASON_OPTIONS.keys()),
-        horizontal=True
+    season = st.selectbox(
+        "Season",
+        [
+            "Autumn",
+            "Spring",
+            "Summer",
+            "Winter"
+        ]
     )
-    
-    # Set nilai one-hot encoding berdasarkan pilihan
-    for col_name in SEASON_OPTIONS.values():
-        input_data[col_name] = 0
-    
-    selected_season_col = SEASON_OPTIONS[season_selection]
-    input_data[selected_season_col] = 1
 
-
-    st.markdown("### 🗺️ Location")
-    
-    # Radio button untuk Location
-    location_selection = st.radio(
-        "Pilih lokasi:",
-        options=list(LOCATION_OPTIONS.keys()),
-        horizontal=True
+    location = st.selectbox(
+        "Location",
+        [
+            "coastal",
+            "inland",
+            "mountain"
+        ]
     )
     
     # Set nilai one-hot encoding berdasarkan pilihan
