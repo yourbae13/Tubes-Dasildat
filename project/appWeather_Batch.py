@@ -39,7 +39,10 @@ def load_model(path):
     return joblib.load(path)
 
 def evaluate_model(model):
-    df = pd.read_csv("weather_classification_data_cleaned.csv")
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    DATA_PATH = os.path.join(BASE_DIR, "weather_classification_data_cleaned.csv")
+
+    df = pd.read_csv(DATA_PATH)
 
     X = df[FEATURE_NAMES]
     y = df["Weather Type"]

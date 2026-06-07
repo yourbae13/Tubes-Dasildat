@@ -67,10 +67,14 @@ def load_model(path):
 # ==========================
 def evaluate_model(model):
     try:
-        df = pd.read_csv("weather_classification_data_cleaned.csv")
+        BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+        DATA_PATH = os.path.join(BASE_DIR, "weather_classification_data_cleaned.csv")
+
+        df = pd.read_csv(DATA_PATH)
 
         X = df[FEATURE_NAMES]
         y_true = df["Weather Type"]
+
         y_pred = model.predict(X)
 
         accuracy = accuracy_score(y_true, y_pred)
@@ -81,7 +85,6 @@ def evaluate_model(model):
 
     except Exception as e:
         return None, None, str(e)
-
 # ==========================
 # UI
 # ==========================
