@@ -467,24 +467,6 @@ else:
     st.header("📂 Upload CSV / Excel")
 
     # Panduan format kolom yang dibutuhkan
-    with st.expander("📋 Format Kolom yang Dibutuhkan", expanded=True):
-        st.markdown("File CSV/Excel cukup memiliki **9 kolom** berikut:")
-        guide_df = pd.DataFrame({
-            "Kolom"        : RAW_FEATURES,
-            "Tipe"         : ["Numerik"] * 6 + ["Teks", "Teks", "Teks"],
-            "Nilai Valid"  : [
-                "Angka desimal",
-                "Angka desimal",
-                "Angka desimal",
-                "Angka desimal",
-                "Angka desimal",
-                "Angka desimal",
-                "clear / cloudy / overcast / partly cloudy",
-                "Autumn / Spring / Summer / Winter",
-                "coastal / inland / mountain",
-            ],
-        })
-        st.dataframe(guide_df, use_container_width=True, hide_index=True)
 
     file = st.file_uploader("Upload file", type=["csv", "xlsx", "xls"])
 
