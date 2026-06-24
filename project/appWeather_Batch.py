@@ -20,6 +20,21 @@ st.set_page_config(
 )
 
 # ========================
+# BIODATA KELOMPOK
+# ========================
+# Silakan isi data di bawah ini (masih kosong / placeholder)
+BIODATA = {
+    "judul_tugas": "Tugas Besar Dasar Ilmu Data - Weather Type & UV Index Prediction",       # contoh: "Prediksi Cuaca Menggunakan Machine Learning"
+    "mata_kuliah": "Dasar Ilmu Data",      
+    "nama_kelompok": "Kelompok 6",     # contoh: "Kelompok 1"
+    "anggota": [
+        {"nama": "Muhammad Fauzan Firdaus", "nim": "707012400036"},
+        {"nama": "Rovalina Andini", "nim": "707012400111"},
+        {"nama": "Bayu Firmansyah", "nim": "707012400135"},
+    ],
+}
+
+# ========================
 # KONSTANTA
 # ========================
 CLASSIFICATION_TARGET = "Weather Type"
@@ -183,6 +198,32 @@ def show_classification_metrics(acc, cm, rep, model):
     )
 
 # ========================
+# HALAMAN BIODATA
+# ========================
+def page_biodata():
+    st.header("👤 Biodata Kelompok")
+
+    judul   = BIODATA["judul_tugas"] or "_(belum diisi)_"
+    matkul  = BIODATA["mata_kuliah"] or "_(belum diisi)_"
+    nama_kp = BIODATA["nama_kelompok"] or "_(belum diisi)_"
+
+    st.markdown(f"### 📌 Judul Tugas\n{judul}")
+    st.markdown(f"**Mata Kuliah:** {matkul}")
+    st.markdown(f"**Nama Kelompok:** {nama_kp}")
+
+    st.divider()
+    st.subheader("👥 Anggota Kelompok")
+
+    cols = st.columns(min(4, max(1, len(BIODATA["anggota"]))))
+    for i, anggota in enumerate(BIODATA["anggota"]):
+        nama = anggota.get("nama") or "_(belum diisi)_"
+        nim  = anggota.get("nim") or "_(belum diisi)_"
+        with cols[i % len(cols)]:
+            st.markdown(f"**{i + 1}. {nama}**")
+            st.caption(f"NIM: {nim}")
+
+
+# ========================
 # HALAMAN VISUALISASI
 # ========================
 def page_visualisasi():
@@ -344,8 +385,15 @@ st.sidebar.title("🌦️ Weather Prediction")
 
 menu_utama = st.sidebar.radio(
     "Navigasi",
-    ["📊 Visualisasi Data", "🏷️ Klasifikasi", "📈 Regresi"],
+    ["👤 Biodata", "📊 Visualisasi Data", "🏷️ Klasifikasi", "📈 Regresi"],
 )
+
+# ========================
+# HALAMAN BIODATA
+# ========================
+if menu_utama == "👤 Biodata":
+    page_biodata()
+    st.stop()
 
 # ========================
 # HALAMAN VISUALISASI
